@@ -144,7 +144,6 @@ def Registration(image, label):
 parser = argparse.ArgumentParser()
 parser.add_argument('--images', default='./Data_folder/T1', help='path to the images a (early frames)')
 parser.add_argument('--labels', default='./Data_folder/T2', help='path to the images b (late frames)')
-parser.add_argument('--split', default=50, help='number of images for testing')
 parser.add_argument('--resolution', default=(1.6,1.6,1.6), help='new resolution to resample the all data')
 parser.add_argument('--config_file', default='./Data_folder/config.json', help='JSON file with a ' 
                                                                                + '"test" attribute (list of all test subjects), ' 
@@ -167,7 +166,7 @@ if __name__ == "__main__":
     list_labels = lstFiles(args.labels)
 
     reference_image = list_labels[0]    # setting a reference image to have all data in the same coordinate system
-    reference_image = config_options.reg_ref + config_options.file_extension
+    reference_image = config_options['reg_ref'] + config_options.file_extension
     reference_image = sitk.ReadImage(reference_image)
     reference_image = resample_sitk_image(reference_image, spacing=args.resolution, interpolator='linear')
 
