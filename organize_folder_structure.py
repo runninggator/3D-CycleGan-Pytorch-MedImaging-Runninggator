@@ -35,7 +35,7 @@ def lstFiles(Path):
 
 
 def CropBackground(image, label):
-    size_new = (240, 240, 120)
+    size_new = label.GetSize()
 
     def Normalization(image):
         """
