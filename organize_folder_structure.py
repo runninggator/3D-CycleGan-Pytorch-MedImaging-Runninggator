@@ -166,7 +166,7 @@ if __name__ == "__main__":
     list_labels = lstFiles(args.labels)
 
     reference_image = list_labels[0]    # setting a reference image to have all data in the same coordinate system
-    reference_image = config_options['reg_ref'] + config_options.file_extension
+    reference_image = config_options['reg_ref'] + config_options['file_extension']
     reference_image = sitk.ReadImage(reference_image)
     reference_image = resample_sitk_image(reference_image, spacing=args.resolution, interpolator='linear')
 
@@ -176,7 +176,7 @@ if __name__ == "__main__":
     if not os.path.isdir('./Data_folder/test'):
         os.mkdir('./Data_folder/test')
 
-    for filename in config_options.train:
+    for filename in config_options['train']:
 
         save_directory_images = './Data_folder/train/images'
         save_directory_labels = './Data_folder/train/labels'
@@ -187,8 +187,8 @@ if __name__ == "__main__":
         if not os.path.isdir(save_directory_labels):
             os.mkdir(save_directory_labels)
 
-        a = os.path.join(args.images, filename, config_options.file_extension)
-        b = os.path.join(args.labels, filename, config_options.file_extension)
+        a = os.path.join(args.images, filename, config_options['file_extension'])
+        b = os.path.join(args.labels, filename, config_options['file_extension'])
 
         print(a)
 
@@ -210,7 +210,7 @@ if __name__ == "__main__":
         sitk.WriteImage(image, image_directory)
         sitk.WriteImage(label, label_directory)
 
-    for filename in config_options.test:
+    for filename in config_options['test']:
 
         save_directory_images = './Data_folder/test/images'
         save_directory_labels = './Data_folder/test/labels'
@@ -221,8 +221,8 @@ if __name__ == "__main__":
         if not os.path.isdir(save_directory_labels):
             os.mkdir(save_directory_labels)
 
-        a = os.path.join(args.images, filename, config_options.file_extension)
-        b = os.path.join(args.labels, filename, config_options.file_extension)
+        a = os.path.join(args.images, filename, config_options['file_extension'])
+        b = os.path.join(args.labels, filename, config_options['file_extension'])
 
         print(a)
 
