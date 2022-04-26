@@ -165,8 +165,14 @@ if __name__ == "__main__":
     list_images = lstFiles(args.images)
     list_labels = lstFiles(args.labels)
 
-    reference_image = list_labels[0]    # setting a reference image to have all data in the same coordinate system
-    reference_image = config_options['reg_ref'] + config_options['file_extension']
+    # setting a reference image to have all data in the same coordinate system
+    reference_image = None
+    for filename in [*list_images, *list_labels]:
+        if f'{config_options["reg_ref"]}.{config_options["file_extension"]}' in filename:
+            reference_image = filename
+            break
+    if reference_image is None:
+        raise Exception('Could not find the reference image in the train or test lists.')
     reference_image = sitk.ReadImage(reference_image)
     reference_image = resample_sitk_image(reference_image, spacing=args.resolution, interpolator='linear')
 
@@ -187,8 +193,8 @@ if __name__ == "__main__":
         if not os.path.isdir(save_directory_labels):
             os.mkdir(save_directory_labels)
 
-        a = os.path.join(args.images, filename, config_options['file_extension'])
-        b = os.path.join(args.labels, filename, config_options['file_extension'])
+        a = os.path.join(args.images, f"{filename}.{config_options['file_extension']}")
+        b = os.path.join(args.labels, f"{filename}.{config_options['file_extension']}")
 
         print(a)
 
@@ -221,8 +227,8 @@ if __name__ == "__main__":
         if not os.path.isdir(save_directory_labels):
             os.mkdir(save_directory_labels)
 
-        a = os.path.join(args.images, filename, config_options['file_extension'])
-        b = os.path.join(args.labels, filename, config_options['file_extension'])
+        a = os.path.join(args.images, f"{filename}.{config_options['file_extension']}")
+        b = os.path.join(args.labels, f"{filename}.{config_options['file_extension']}")
 
         print(a)
 
