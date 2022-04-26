@@ -166,7 +166,7 @@ if __name__ == "__main__":
         raise Exception('Could not find the reference image in the train or test lists.')
     
     reference_image = sitk.ReadImage(reference_image)
-    # reference_image = resample_sitk_image(reference_image, spacing=args.resolution, interpolator='linear')
+    reference_image = resample_sitk_image(reference_image, spacing=args.resolution, interpolator='linear')
 
     for split in ['train', 'test', 'validation']:
         for filename in config_options[split]:
@@ -192,8 +192,8 @@ if __name__ == "__main__":
             label, _ = Registration(label, reference_image, transform_path)
             image, label = Registration(image, label)
 
-            # image = resample_sitk_image(image, spacing=args.resolution, interpolator='linear')
-            # label = resample_sitk_image(label, spacing=args.resolution, interpolator='linear')
+            image = resample_sitk_image(image, spacing=args.resolution, interpolator='linear')
+            label = resample_sitk_image(label, spacing=args.resolution, interpolator='linear')
 
             image, label = CropBackground(image, label)
 
