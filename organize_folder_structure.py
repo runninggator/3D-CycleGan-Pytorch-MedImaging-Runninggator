@@ -34,22 +34,6 @@ def lstFiles(Path):
     return images_list
 
 
-def Align(image, reference):
-
-    image_array = sitk.GetArrayFromImage(image)
-
-    label_origin = reference.GetOrigin()
-    label_direction = reference.GetDirection()
-    label_spacing = reference.GetSpacing()
-
-    image = sitk.GetImageFromArray(image_array)
-    image.SetOrigin(label_origin)
-    image.SetSpacing(label_spacing)
-    image.SetDirection(label_direction)
-
-    return image
-
-
 def CropBackground(image, label):
     size_new = (240, 240, 120)
 
@@ -68,7 +52,6 @@ def CropBackground(image, label):
         return image
 
     image2 = Normalization(image)
-    label2 = Normalization(label)
 
     threshold = sitk.BinaryThresholdImageFilter()
     threshold.SetLowerThreshold(20)
@@ -174,7 +157,7 @@ if __name__ == "__main__":
     # setting a reference image to have all data in the same coordinate system
     reference_image = None
 
-    for filename in [*list_images, *list_labels]:
+    for filename in list_labels:
         if f'{config_options["reg_ref"]}.{config_options["file_extension"]}' in filename:
             reference_image = filename
             break
@@ -206,14 +189,13 @@ if __name__ == "__main__":
 
             transform_path = os.path.join(save_directory_transforms, f'{filename}.tfm')
 
-            label, reference_image = Registration(label, reference_image, transform_path)
+            label, _ = Registration(label, reference_image, transform_path)
             image, label = Registration(image, label)
 
             image = resample_sitk_image(image, spacing=args.resolution, interpolator='linear')
             label = resample_sitk_image(label, spacing=args.resolution, interpolator='linear')
 
-            # image = Align(image, reference_image)
-            # label = Align(label, reference_image)
+            # image, label = CropBackground(image, reference_image)
 
             label_directory = os.path.join(str(save_directory_labels), f'{filename}.nii')
             image_directory = os.path.join(str(save_directory_images), f'{filename}.nii')
