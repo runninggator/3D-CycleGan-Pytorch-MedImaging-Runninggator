@@ -195,7 +195,8 @@ if __name__ == "__main__":
             image = resample_sitk_image(image, spacing=args.resolution, interpolator='linear')
             label = resample_sitk_image(label, spacing=args.resolution, interpolator='linear')
 
-            # image, label = CropBackground(image, reference_image)
+            label, _ = CropBackground(label, reference_image)
+            image, label = CropBackground(image, label)
 
             label_directory = os.path.join(str(save_directory_labels), f'{filename}.nii')
             image_directory = os.path.join(str(save_directory_images), f'{filename}.nii')
