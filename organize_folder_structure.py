@@ -97,7 +97,7 @@ def CropBackground(image, label):
     return image_crop, label_crop
 
 
-def Registration(image, label):
+def Registration(image, label, save_path=''):
 
     image, image_sobel, label, label_sobel,  = image, image, label, label
 
@@ -138,18 +138,24 @@ def Registration(image, label):
     image = sitk.Resample(image, fixed_image, final_transform, sitk.sitkLinear, 0.0,
                                      moving_image.GetPixelID())
 
+    # Save transform
+    if save_path:
+        sitk.WriteTransform(final_transform, save_path)
+
     return image, label
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--images', default='./Data_folder/T1', help='path to the images a (early frames)')
 parser.add_argument('--labels', default='./Data_folder/T2', help='path to the images b (late frames)')
+parser.add_argument('--result', default='./Data_folder/', help='path to save the train/test/validation/transformation images')
 parser.add_argument('--resolution', default=(1.6,1.6,1.6), help='new resolution to resample the all data')
-parser.add_argument('--config_file', default='./Data_folder/config.json', help='JSON file with a ' 
-                                                                               + '"test" attribute (list of all test subjects), ' 
-                                                                               + '"train" attribute (list of all train subjects), '
-                                                                               + '"file_extension" attribute and ' 
-                                                                               + '"reg_ref" attribute (name of subject to register all subjects with)')
+parser.add_argument('--config_file',  help='JSON file with a ' 
+                                            + '"test" attribute (list of all test subjects), ' 
+                                            + '"train" attribute (list of all train subjects), '
+                                            + '"validation" attribute (list of all validation subjects) '
+                                            + '"file_extension" attribute and ' 
+                                            + '"reg_ref" attribute (name of subject to register all subjects with)')
 args = parser.parse_args()
 
 if __name__ == "__main__":
@@ -167,86 +173,50 @@ if __name__ == "__main__":
 
     # setting a reference image to have all data in the same coordinate system
     reference_image = None
+
     for filename in [*list_images, *list_labels]:
         if f'{config_options["reg_ref"]}.{config_options["file_extension"]}' in filename:
             reference_image = filename
             break
+
     if reference_image is None:
         raise Exception('Could not find the reference image in the train or test lists.')
+    
     reference_image = sitk.ReadImage(reference_image)
     reference_image = resample_sitk_image(reference_image, spacing=args.resolution, interpolator='linear')
 
-    if not os.path.isdir('./Data_folder/train'):
-        os.mkdir('./Data_folder/train')
+    for split in ['train', 'test', 'validation']:
+        for filename in config_options[split]:
 
-    if not os.path.isdir('./Data_folder/test'):
-        os.mkdir('./Data_folder/test')
+            save_directory_images = os.path.join(args.result, split, 'images')
+            save_directory_labels = os.path.join(args.result, split, 'labels')
+            save_directory_transforms = os.path.join(args.result, split, 'transforms')
 
-    for filename in config_options['train']:
+            for dir_name in [save_directory_images, save_directory_labels, save_directory_transforms]:
+                if not os.path.isdir(dir_name):
+                    os.makedirs(dir_name)
 
-        save_directory_images = './Data_folder/train/images'
-        save_directory_labels = './Data_folder/train/labels'
+            a = os.path.join(args.images, f"{filename}.{config_options['file_extension']}")
+            b = os.path.join(args.labels, f"{filename}.{config_options['file_extension']}")
 
-        if not os.path.isdir(save_directory_images):
-            os.mkdir(save_directory_images)
+            print(a)
 
-        if not os.path.isdir(save_directory_labels):
-            os.mkdir(save_directory_labels)
+            label = sitk.ReadImage(b)
+            image = sitk.ReadImage(a)
 
-        a = os.path.join(args.images, f"{filename}.{config_options['file_extension']}")
-        b = os.path.join(args.labels, f"{filename}.{config_options['file_extension']}")
+            transform_path = os.path.join(save_directory_transforms, f'{filename}.tfm')
 
-        print(a)
+            label, reference_image = Registration(label, reference_image, transform_path)
+            image, label = Registration(image, label)
 
-        label = sitk.ReadImage(b)
-        image = sitk.ReadImage(a)
+            image = resample_sitk_image(image, spacing=args.resolution, interpolator='linear')
+            label = resample_sitk_image(label, spacing=args.resolution, interpolator='linear')
 
-        label, reference_image = Registration(label, reference_image)
-        image, label = Registration(image, label)
+            # image = Align(image, reference_image)
+            # label = Align(label, reference_image)
 
-        image = resample_sitk_image(image, spacing=args.resolution, interpolator='linear')
-        label = resample_sitk_image(label, spacing=args.resolution, interpolator='linear')
+            label_directory = os.path.join(str(save_directory_labels), f'{filename}.nii')
+            image_directory = os.path.join(str(save_directory_images), f'{filename}.nii')
 
-        # image = Align(image, reference_image)
-        # label = Align(label, reference_image)
-
-        label_directory = os.path.join(str(save_directory_labels), f'{filename}.nii')
-        image_directory = os.path.join(str(save_directory_images), f'{filename}.nii')
-
-        sitk.WriteImage(image, image_directory)
-        sitk.WriteImage(label, label_directory)
-
-    for filename in config_options['test']:
-
-        save_directory_images = './Data_folder/test/images'
-        save_directory_labels = './Data_folder/test/labels'
-
-        if not os.path.isdir(save_directory_images):
-            os.mkdir(save_directory_images)
-
-        if not os.path.isdir(save_directory_labels):
-            os.mkdir(save_directory_labels)
-
-        a = os.path.join(args.images, f"{filename}.{config_options['file_extension']}")
-        b = os.path.join(args.labels, f"{filename}.{config_options['file_extension']}")
-
-        print(a)
-
-        label = sitk.ReadImage(b)
-        image = sitk.ReadImage(a)
-
-        label, reference_image = Registration(label, reference_image)
-        image, label = Registration(image, label)
-
-        image = resample_sitk_image(image, spacing=args.resolution, interpolator='linear')
-        label = resample_sitk_image(label, spacing=args.resolution, interpolator='linear')
-
-        # image = Align(image, reference_image)
-        # label = Align(label, reference_image)
-
-        label_directory = os.path.join(str(save_directory_labels), f'{filename}.nii')
-        image_directory = os.path.join(str(save_directory_images), f'{filename}.nii')
-
-        sitk.WriteImage(image, image_directory)
-        sitk.WriteImage(label, label_directory)
-
+            sitk.WriteImage(image, image_directory)
+            sitk.WriteImage(label, label_directory)
