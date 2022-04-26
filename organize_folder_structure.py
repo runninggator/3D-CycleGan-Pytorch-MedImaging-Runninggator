@@ -146,7 +146,7 @@ parser.add_argument('--images', default='./Data_folder/T1', help='path to the im
 parser.add_argument('--labels', default='./Data_folder/T2', help='path to the images b (late frames)')
 parser.add_argument('--split', default=50, help='number of images for testing')
 parser.add_argument('--resolution', default=(1.6,1.6,1.6), help='new resolution to resample the all data')
-parser.add_argument('--config_file', defulat='./Data_folder/config.json', help='JSON file with a ' 
+parser.add_argument('--config_file', default='./Data_folder/config.json', help='JSON file with a ' 
                                                                                + '"test" attribute (list of all test subjects), ' 
                                                                                + '"train" attribute (list of all train subjects), '
                                                                                + '"file_extension" attribute and ' 
