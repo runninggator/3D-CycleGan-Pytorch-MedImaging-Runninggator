@@ -35,7 +35,7 @@ def lstFiles(Path):
 
 
 def CropBackground(image, label):
-    size_new = image.GetSize()
+    size_new = (240, 240, 120)
 
     def Normalization(image):
         """
@@ -195,7 +195,7 @@ if __name__ == "__main__":
             image = resample_sitk_image(image, spacing=args.resolution, interpolator='linear')
             label = resample_sitk_image(label, spacing=args.resolution, interpolator='linear')
 
-            image, label = CropBackground(image, label)
+            # image, label = CropBackground(image, label)
 
             label_directory = os.path.join(str(save_directory_labels), f'{filename}.nii')
             image_directory = os.path.join(str(save_directory_images), f'{filename}.nii')
