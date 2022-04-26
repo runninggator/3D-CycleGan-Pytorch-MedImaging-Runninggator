@@ -8,6 +8,7 @@ import numpy as np
 import SimpleITK as sitk
 import scipy.ndimage as ndimage
 from utils.NiftiDataset import *
+import json
 
 
 def numericalSort(value):
@@ -145,14 +146,28 @@ parser.add_argument('--images', default='./Data_folder/T1', help='path to the im
 parser.add_argument('--labels', default='./Data_folder/T2', help='path to the images b (late frames)')
 parser.add_argument('--split', default=50, help='number of images for testing')
 parser.add_argument('--resolution', default=(1.6,1.6,1.6), help='new resolution to resample the all data')
+parser.add_argument('--config_file', './Data_folder/config.json', help= 'JSON file with a ' 
+                                                                        + '"test" attribute (list of all test subjects), ' 
+                                                                        + '"train" attribute (list of all train subjects), '
+                                                                        + '"file_extension" attribute and ' 
+                                                                        + '"reg_ref" attribute (name of subject to register all subjects with)')
 args = parser.parse_args()
 
 if __name__ == "__main__":
+
+    # Read json config file
+    config_options = json.load(open(args.config_file))
+
+    # Check config file has the required attributes
+    required_attributes = ['file_extension', 'reg_ref', 'train', 'test']
+    if not all(attribute in config_options for attribute in required_attributes):
+        raise Exception(f'Config file is missing attributes. Required attributes: {str(required_attributes)}')
 
     list_images = lstFiles(args.images)
     list_labels = lstFiles(args.labels)
 
     reference_image = list_labels[0]    # setting a reference image to have all data in the same coordinate system
+    reference_image = config_options.reg_ref + config_options.file_extension
     reference_image = sitk.ReadImage(reference_image)
     reference_image = resample_sitk_image(reference_image, spacing=args.resolution, interpolator='linear')
 
@@ -162,7 +177,7 @@ if __name__ == "__main__":
     if not os.path.isdir('./Data_folder/test'):
         os.mkdir('./Data_folder/test')
 
-    for i in range(len(list_images)-int(args.split)):
+    for filename in config_options.train:
 
         save_directory_images = './Data_folder/train/images'
         save_directory_labels = './Data_folder/train/labels'
@@ -173,8 +188,8 @@ if __name__ == "__main__":
         if not os.path.isdir(save_directory_labels):
             os.mkdir(save_directory_labels)
 
-        a = list_images[int(args.split)+i]
-        b = list_labels[int(args.split)+i]
+        a = os.path.join(args.images, filename, config_options.file_extension)
+        b = os.path.join(args.labels, filename, config_options.file_extension)
 
         print(a)
 
@@ -190,13 +205,13 @@ if __name__ == "__main__":
         # image = Align(image, reference_image)
         # label = Align(label, reference_image)
 
-        label_directory = os.path.join(str(save_directory_labels), str(i) + '.nii')
-        image_directory = os.path.join(str(save_directory_images), str(i) + '.nii')
+        label_directory = os.path.join(str(save_directory_labels), f'{filename}.nii')
+        image_directory = os.path.join(str(save_directory_images), f'{filename}.nii')
 
         sitk.WriteImage(image, image_directory)
         sitk.WriteImage(label, label_directory)
 
-    for i in range(int(args.split)):
+    for filename in config_options.test:
 
         save_directory_images = './Data_folder/test/images'
         save_directory_labels = './Data_folder/test/labels'
@@ -207,8 +222,8 @@ if __name__ == "__main__":
         if not os.path.isdir(save_directory_labels):
             os.mkdir(save_directory_labels)
 
-        a = list_images[i]
-        b = list_labels[i]
+        a = os.path.join(args.images, filename, config_options.file_extension)
+        b = os.path.join(args.labels, filename, config_options.file_extension)
 
         print(a)
 
@@ -224,8 +239,8 @@ if __name__ == "__main__":
         # image = Align(image, reference_image)
         # label = Align(label, reference_image)
 
-        label_directory = os.path.join(str(save_directory_labels), str(i) + '.nii')
-        image_directory = os.path.join(str(save_directory_images), str(i) + '.nii')
+        label_directory = os.path.join(str(save_directory_labels), f'{filename}.nii')
+        image_directory = os.path.join(str(save_directory_images), f'{filename}.nii')
 
         sitk.WriteImage(image, image_directory)
         sitk.WriteImage(label, label_directory)
