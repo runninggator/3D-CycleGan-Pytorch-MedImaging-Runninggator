@@ -12,10 +12,13 @@ import json
 
 
 def numericalSort(value):
-    numbers = re.compile(r'(\d+)')
-    parts = numbers.split(value)
-    parts[1::2] = map(int, parts[1::2])
-    return parts
+    # Get all numbers from string
+    num = ''.join(re.findall(r'(\d+)', value))
+
+    if num:
+        return int(num)
+    else:
+        return 0
 
 
 def lstFiles(Path):
