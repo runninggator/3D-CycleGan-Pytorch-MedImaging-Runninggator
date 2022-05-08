@@ -142,6 +142,7 @@ parser.add_argument('--config_file',  help='JSON file with a '
                                             + '"validation" attribute (list of all validation subjects) '
                                             + '"file_extension" attribute and ' 
                                             + '"reg_ref" attribute (name of subject to register all subjects with)')
+parser.add_argument('--no_reg', action='store_true', help='Whether to skip the registration step')
 args = parser.parse_args()
 
 if __name__ == "__main__":
@@ -150,7 +151,7 @@ if __name__ == "__main__":
     config_options = json.load(open(args.config_file))
 
     # Check config file has the required attributes
-    required_attributes = ['file_extension', 'reg_ref', 'train', 'test']
+    required_attributes = ['file_extension', 'train', 'test']
     if not all(attribute in config_options for attribute in required_attributes):
         raise Exception(f'Config file is missing attributes. Required attributes: {str(required_attributes)}')
 
@@ -160,16 +161,17 @@ if __name__ == "__main__":
     # setting a reference image to have all data in the same coordinate system
     reference_image = None
 
-    for filename in list_labels:
-        if f'{config_options["reg_ref"]}.{config_options["file_extension"]}' in filename:
-            reference_image = filename
-            break
+    if not args.no_regs and args.reg_ref:
+        for filename in list_labels:
+            if f'{config_options["reg_ref"]}.{config_options["file_extension"]}' in filename:
+                reference_image = filename
+                break
 
-    if reference_image is None:
-        raise Exception('Could not find the reference image in the train or test lists.')
-    
-    reference_image = sitk.ReadImage(reference_image)
-    reference_image = resample_sitk_image(reference_image, spacing=args.resolution, interpolator='linear')
+        if reference_image is None:
+            raise Exception('Could not find the reference image in the train or test lists.')
+        
+        reference_image = sitk.ReadImage(reference_image)
+        reference_image = resample_sitk_image(reference_image, spacing=args.resolution, interpolator='linear')
 
     for split in ['train', 'test', 'validation']:
         for filename in config_options[split]:
@@ -190,13 +192,14 @@ if __name__ == "__main__":
             label = sitk.ReadImage(b)
             image = sitk.ReadImage(a)
 
-            transform_path = os.path.join(save_directory_transforms, f'{filename}.tfm')
+            if not args.no_regs and args.reg_ref:
+                transform_path = os.path.join(save_directory_transforms, f'{filename}.tfm')
 
-            label, _ = Registration(label, reference_image, transform_path)
-            image, label = Registration(image, label)
+                label, _ = Registration(label, reference_image, transform_path)
+                image, label = Registration(image, label)
 
-            image = resample_sitk_image(image, spacing=args.resolution, interpolator='linear')
-            label = resample_sitk_image(label, spacing=args.resolution, interpolator='linear')
+                image = resample_sitk_image(image, spacing=args.resolution, interpolator='linear')
+                label = resample_sitk_image(label, spacing=args.resolution, interpolator='linear')
 
             # image, label = CropBackground(image, label)
 
