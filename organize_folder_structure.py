@@ -161,17 +161,20 @@ if __name__ == "__main__":
     # setting a reference image to have all data in the same coordinate system
     reference_image = None
 
-    if not args.no_regs and args.reg_ref:
-        for filename in list_labels:
-            if f'{config_options["reg_ref"]}.{config_options["file_extension"]}' in filename:
-                reference_image = filename
-                break
+    if not args.no_reg:
+        if args.reg_ref:
+            for filename in list_labels:
+                if f'{config_options["reg_ref"]}.{config_options["file_extension"]}' in filename:
+                    reference_image = filename
+                    break
 
-        if reference_image is None:
-            raise Exception('Could not find the reference image in the train or test lists.')
-        
-        reference_image = sitk.ReadImage(reference_image)
-        reference_image = resample_sitk_image(reference_image, spacing=args.resolution, interpolator='linear')
+            if reference_image is None:
+                raise Exception('Could not find the reference image in the train or test lists.')
+            
+            reference_image = sitk.ReadImage(reference_image)
+            reference_image = resample_sitk_image(reference_image, spacing=args.resolution, interpolator='linear')
+        else:
+            raise Exception('Config file is missing attribute "reg_ref".')
 
     for split in ['train', 'test', 'validation']:
         for filename in config_options[split]:
@@ -192,7 +195,7 @@ if __name__ == "__main__":
             label = sitk.ReadImage(b)
             image = sitk.ReadImage(a)
 
-            if not args.no_regs and args.reg_ref:
+            if not args.no_reg and args.reg_ref:
                 transform_path = os.path.join(save_directory_transforms, f'{filename}.tfm')
 
                 label, _ = Registration(label, reference_image, transform_path)
