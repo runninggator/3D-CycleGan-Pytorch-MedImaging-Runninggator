@@ -26,11 +26,7 @@ def lstFiles(Path):
     images_list = []  # create an empty list, the raw image data files is stored here
     for dirName, subdirList, fileList in os.walk(Path):
         for filename in fileList:
-            if ".nii.gz" in filename.lower():
-                images_list.append(os.path.join(dirName, filename))
-            elif ".nii" in filename.lower():
-                images_list.append(os.path.join(dirName, filename))
-            elif ".mhd" in filename.lower():
+            if filename.lower() in [".nii.gz", ".nii", ".mhd"]:
                 images_list.append(os.path.join(dirName, filename))
 
     images_list = sorted(images_list, key=numericalSort)
@@ -172,7 +168,7 @@ if __name__ == "__main__":
                 raise Exception('Could not find the reference image in the train or test lists.')
             
             reference_image = sitk.ReadImage(reference_image)
-            reference_image = resample_sitk_image(reference_image, spacing=args.resolution, interpolator='linear')
+            # reference_image = resample_sitk_image(reference_image, spacing=args.resolution, interpolator='linear')
         else:
             raise Exception('Config file is missing attribute "reg_ref".')
 
