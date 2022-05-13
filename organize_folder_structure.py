@@ -192,7 +192,7 @@ if __name__ == "__main__":
             label = sitk.ReadImage(b)
             image = sitk.ReadImage(a)
 
-            if not args.no_reg and args.reg_ref:
+            if not args.no_reg and "reg_ref" in config_options:
                 transform_path = os.path.join(save_directory_transforms, f'{filename}.tfm')
 
                 label, _ = Registration(label, reference_image, transform_path)
