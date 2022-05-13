@@ -34,52 +34,6 @@ def lstFiles(Path):
     return images_list
 
 
-def CropBackground(image, label):
-    size_new = (240, 240, 120)
-
-    def Normalization(image):
-        """
-        Normalize an image to 0 - 255 (8bits)
-        """
-        normalizeFilter = sitk.NormalizeImageFilter()
-        resacleFilter = sitk.RescaleIntensityImageFilter()
-        resacleFilter.SetOutputMaximum(255)
-        resacleFilter.SetOutputMinimum(0)
-
-        image = normalizeFilter.Execute(image)  # set mean and std deviation
-        image = resacleFilter.Execute(image)  # set intensity 0-255
-
-        return image
-
-    image2 = Normalization(image)
-
-    threshold = sitk.BinaryThresholdImageFilter()
-    threshold.SetLowerThreshold(20)
-    threshold.SetUpperThreshold(255)
-    threshold.SetInsideValue(1)
-    threshold.SetOutsideValue(0)
-
-    roiFilter = sitk.RegionOfInterestImageFilter()
-    roiFilter.SetSize([size_new[0], size_new[1], size_new[2]])
-
-    image_mask = threshold.Execute(image2)
-    image_mask = sitk.GetArrayFromImage(image_mask)
-    image_mask = np.transpose(image_mask, (2, 1, 0))
-
-    import scipy
-    centroid = scipy.ndimage.measurements.center_of_mass(image_mask)
-
-    x_centroid = np.int(centroid[0])
-    y_centroid = np.int(centroid[1])
-
-    roiFilter.SetIndex([int(x_centroid - (size_new[0]) / 2), int(y_centroid - (size_new[1]) / 2), 0])
-
-    label_crop = roiFilter.Execute(label)
-    image_crop = roiFilter.Execute(image)
-
-    return image_crop, label_crop
-
-
 def Registration(image, label, save_path=''):
 
     image, image_sobel, label, label_sobel,  = image, image, label, label
@@ -200,8 +154,6 @@ if __name__ == "__main__":
 
                 image = resample_sitk_image(image, spacing=args.resolution, interpolator='linear')
                 label = resample_sitk_image(label, spacing=args.resolution, interpolator='linear')
-
-            # image, label = CropBackground(image, label)
 
             label_directory = os.path.join(str(save_directory_labels), f'{filename}.nii')
             image_directory = os.path.join(str(save_directory_images), f'{filename}.nii')
