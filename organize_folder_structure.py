@@ -158,7 +158,7 @@ if __name__ == "__main__":
     reference_image = None
 
     if not args.no_reg:
-        if args.reg_ref:
+        if "reg_ref" in config_options:
             for filename in list_labels:
                 if f'{config_options["reg_ref"]}.{config_options["file_extension"]}' in filename:
                     reference_image = filename
