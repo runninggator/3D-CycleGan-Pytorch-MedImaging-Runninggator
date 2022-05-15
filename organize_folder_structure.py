@@ -123,7 +123,7 @@ if __name__ == "__main__":
                 raise Exception('Could not find the reference image in the label list.')
             
             reference_image = sitk.ReadImage(reference_image)
-            # reference_image = resample_sitk_image(reference_image, spacing=args.resolution, interpolator='linear')
+            reference_image = resample_sitk_image(reference_image, spacing=args.resolution, interpolator='linear')
         else:
             raise Exception('Config file is missing attribute "reg_ref".')
 
@@ -149,11 +149,11 @@ if __name__ == "__main__":
             if not args.no_reg and "reg_ref" in config_options:
                 transform_path = os.path.join(save_directory_transforms, f'{filename}.tfm')
 
-                label, _ = Registration(label, reference_image, transform_path)
-                image, label = Registration(image, label)
-
                 image = resample_sitk_image(image, spacing=args.resolution, interpolator='linear')
                 label = resample_sitk_image(label, spacing=args.resolution, interpolator='linear')
+
+                label, _ = Registration(label, reference_image, transform_path)
+                image, label = Registration(image, label)
 
             label_directory = os.path.join(str(save_directory_labels), f'{filename}.nii')
             image_directory = os.path.join(str(save_directory_images), f'{filename}.nii')
